@@ -6,34 +6,43 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.viewModels
 import androidx.core.view.isVisible
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.android.committeeapp.R
 import com.android.committeeapp.comittee.CommitteeModel
+import com.android.committeeapp.databinding.ActivityAddFormBinding
+import com.android.committeeapp.databinding.LayoutAddFormBinding
 import com.android.committeeapp.member.MemberModel
 import com.android.committeeapp.room.RoomDb
 import kotlinx.android.synthetic.main.item_committee.*
 import kotlinx.android.synthetic.main.layout_add_form.*
 import kotlinx.coroutines.launch
 import java.util.*
-import kotlin.collections.ArrayList
+
 
 class AddFormActivity : BaseActivity() {
 
 
+    lateinit var binding: ActivityAddFormBinding
     override var animationKind = ANIMATION_SLIDE_FROM_BOTTOM
 
-    var mForMembers = false;
-    var mComId = -1;
+    private val viewModel: AddViewModel by viewModels<AddViewModel> {
+        AddViewModelFactory(RoomDb.get(this@AddFormActivity))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_form)
-        setupActionBar()
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_add_form)
+        binding.lifecycleOwner = this@AddFormActivity
+        binding.fragmentNavigationHost.lifecycleOwner = this
+        binding.fragmentNavigationHost.viewModel = viewModel
+        binding.viewModel = viewModel
         getExtra()
-        configureViews()
-
-
+        setupActionBar()
     }
 
 
@@ -67,85 +76,24 @@ class AddFormActivity : BaseActivity() {
     }
 
     private fun validate(): Boolean {
-
-        return if (mForMembers) {
-            if (turn.text.isEmpty())
-                turn.error = getString(R.string.required)
-            if (editMemberTitle.text.isEmpty())
-                editMemberTitle.error = getString(R.string.required)
-
-            turn.text.isNotEmpty() && editMemberTitle.text.isNotEmpty()
-        } else {
-            if (perAmount.text.isEmpty())
-                perAmount.error = getString(R.string.required)
-            if (editTextAmount.text.isEmpty())
-                editTextAmount.error = getString(R.string.required)
-            if (editTextTitle.text.isEmpty())
-                editTextTitle.error = getString(R.string.required)
-            if (containerTags.text.isEmpty())
-                containerTags.error = getString(R.string.required)
-
-            perAmount.text.isNotEmpty() && editTextTitle.text.isNotEmpty() && containerTags.text.isNotEmpty() && editTextAmount.text.isNotEmpty()
-        }
+        return viewModel.validateFields(getString(R.string.required))
     }
 
     private fun save() {
         lifecycleScope.launch {
             RoomDb.get(this@AddFormActivity).let { rdb ->
-                if (mForMembers) {
-                    rdb.membersDAO().addMember(
-                        MemberModel(
-                            editMemberTitle.text.toString(),
-                            turn.text.toString().toInt(),
-                            Date().time,
-                            mComId
-                        )
-                    )
+                viewModel.save().apply {
                     this@AddFormActivity.finish()
-
-                } else {
-                    rdb.committeeDAO().addCommittee(
-                        CommitteeModel(
-                            editTextTitle.text.toString(),
-                            editTextAmount.text.toString().toDouble(),
-                            Date().time,
-                            containerTags.text.toString().toInt(),
-                            perAmount.text.toString().toDouble()
-                        )
-                    )
-
-                    this@AddFormActivity.finish()
-
                 }
             }
 
         }
-
     }
 
     fun getExtra() {
-        mComId = intent?.extras?.getInt(COMMITTEE_ID) ?: -1
-        mForMembers = mComId != -1
+        viewModel.mComId = intent?.extras?.getInt(COMMITTEE_ID) ?: -1
+        viewModel.isMember.value = viewModel.mComId != -1
 
-    }
-
-    fun configureViews() {
-        if (mForMembers) {
-            turn.isVisible = true
-            month.isVisible = true
-            editMemberTitle.isVisible = true
-            image_member.isVisible = true
-        } else {
-            perAmount.isVisible = true
-            perSymbol.isVisible = true
-            textSymbol.isVisible = true
-            editTextAmount.isVisible = true
-
-            imageTags.isVisible = true
-            imageTitle.isVisible = true
-            editTextTitle.isVisible = true
-            containerTags.isVisible = true
-        }
     }
 
     companion object {

@@ -70,11 +70,11 @@ class MemberDetailActivity
             .setMinimumDate(
                 CalendarDay.from(
                     year - 2,
-                    month,
+                    month+1,
                     1
                 )
             )
-            .setMaximumDate(CalendarDay.from(year + 2, month, 1))
+            .setMaximumDate(CalendarDay.from(year + 2, month+1, 1))
             .setCalendarDisplayMode(CalendarMode.MONTHS)
             .commit();
 
