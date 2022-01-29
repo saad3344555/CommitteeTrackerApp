@@ -7,6 +7,9 @@ import androidx.recyclerview.widget.ListAdapter
 import com.android.committeeapp.R
 import com.android.committeeapp.comittee.CommitteeItemHolder
 import com.android.committeeapp.comittee.CommitteeModel
+import com.android.committeeapp.databinding.ItemCommitteeBinding
+import com.android.committeeapp.databinding.ItemMemberBinding
+import com.android.committeeapp.databinding.LayoutMembersBinding
 import com.android.committeeapp.member.MemberItemHolder
 import com.android.committeeapp.member.MemberModel
 
@@ -14,10 +17,15 @@ class HomeAdapter : ListAdapter<HomeItemModel, HomeItemHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HomeItemHolder {
         val inflater = LayoutInflater.from(parent.context)
-        val itemView = inflater.inflate(viewType, parent, false)
         return when (viewType) {
-            COMMITTEE_ITEM_TYPE -> CommitteeItemHolder(itemView)
-            MEMBER_ITEM_TYPE -> MemberItemHolder(itemView)
+            COMMITTEE_ITEM_TYPE -> {
+                val binding = ItemCommitteeBinding.inflate(inflater,parent,false)
+                CommitteeItemHolder(binding)
+            }
+            MEMBER_ITEM_TYPE -> {
+                val binding = ItemMemberBinding.inflate(inflater,parent,false)
+                MemberItemHolder(binding)
+            }
             else -> throw IllegalArgumentException()
         }
     }
@@ -30,14 +38,6 @@ class HomeAdapter : ListAdapter<HomeItemModel, HomeItemHolder>(DiffCallback()) {
                 itemModel
             )
 
-        }
-    }
-
-    override fun onViewRecycled(holder: HomeItemHolder) {
-        super.onViewRecycled(holder)
-        when (holder) {
-            is MemberItemHolder -> holder.recycle()
-            is CommitteeItemHolder -> holder.recycle()
         }
     }
 

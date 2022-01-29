@@ -23,4 +23,9 @@ data class CommitteeModel(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "c_id")
     var id: Int = 0
+
+
+
+
+
 }
